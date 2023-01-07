@@ -48,7 +48,7 @@ on-run-end:
 # ======
 seeds:
   +enabled: true
-  +database: "{{ env_var('DBT_DBT_SNOWFLAKE_PROD_DATABASE') }}" #PROD
+  +database: "{{ env_var('DBT_SNOWFLAKE_PROD_DATABASE') }}" #PROD
   +schema: legacy
   +quote_columns: False
   +post-hook:
