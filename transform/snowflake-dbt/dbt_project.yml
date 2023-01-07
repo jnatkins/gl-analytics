@@ -37,7 +37,7 @@ query-comment:
 on-run-start:
     - "{{ resume_warehouse(var('resume_warehouse', false), var('warehouse_name')) }}"
     - "{{ create_udfs() }}"
-    - "create schema if not exists \"{{generate_database_name(env_var('SNOWFLAKE_PREP_DATABASE'))}}\".snowplow_{{ var('year', run_started_at.strftime('%Y')) }}_{{ var('month', run_started_at.strftime('%m')) }}"
+    - "create schema if not exists \"{{generate_database_name(env_var('DBT_SNOWFLAKE_PREP_DATABASE'))}}\".snowplow_{{ var('year', run_started_at.strftime('%Y')) }}_{{ var('month', run_started_at.strftime('%m')) }}"
 
 on-run-end:
     - "{{ grant_usage_to_schemas() }}"
@@ -48,7 +48,7 @@ on-run-end:
 # ======
 seeds:
   +enabled: true
-  +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" #PROD
+  +database: "{{ env_var('DBT_DBT_SNOWFLAKE_PROD_DATABASE') }}" #PROD
   +schema: legacy
   +quote_columns: False
   +post-hook:
@@ -73,7 +73,7 @@ vars:
   infinity_past: TO_DATE('1970-01-01', 'YYYY-MM-DD')
   tomorrow: DATEADD('day',1,CURRENT_DATE())
 
-  warehouse_name: "{{ env_var('SNOWFLAKE_TRANSFORM_WAREHOUSE') }}"
+  warehouse_name: "{{ env_var('DBT_SNOWFLAKE_TRANSFORM_WAREHOUSE') }}"
   valid_at: '{{ run_started_at.strftime("%Y-%m-%d %H:%M:%S%z") }}'
 
   snowplow:pass_through_columns: ['glm_source','gsc_environment','gsc_extra','gsc_namespace_id','gsc_plan','gsc_google_analytics_client_id','gsc_project_id','gsc_pseudonymized_user_id','gsc_source','cf_formid','cf_elementid','cf_nodename','cf_type','cf_elementclasses','cf_value','sf_formid','sf_formclasses','sf_elements','ff_formid','ff_elementid','ff_nodename','ff_elementtype','ff_elementclasses','ff_value','lc_elementid','lc_elementclasses','lc_elementtarget','lc_targeturl','lc_elementcontent','tt_category','tt_variable','tt_timing','tt_label']
@@ -93,7 +93,7 @@ vars:
 # Model Configs
 # ==================
 models:
-  +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" # PROD
+  +database: "{{ env_var('DBT_SNOWFLAKE_PROD_DATABASE') }}" # PROD
   +schema: legacy  # Top level override since profiles defaults to PREP
   +copy_grants: true # Maintain any existing Permifrost grants
   +post-hook:
@@ -104,7 +104,7 @@ models:
   # Snowplow Package https://hub.getdbt.com/fishtown-analytics/snowplow/latest/
   # ------------------
   snowplow:
-    +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+    +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
     +schema: "snowplow_{{ var('year', (run_started_at - modules.datetime.timedelta(1)).strftime('%Y')) }}_{{ var('month', (run_started_at - modules.datetime.timedelta(1)).strftime('%m')) }}"
     +tags: ["product"]
     +incremental_strategy: "delete+insert"
@@ -129,7 +129,7 @@ models:
     # Sources
     # ------------------
     sources:
-      +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+      +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
       +tags: ["sources"]
 
       airflow:
@@ -184,7 +184,7 @@ models:
         +tags: ["driveload"]
 
       engineering:
-        +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" # PROD
+        +database: "{{ env_var('DBT_SNOWFLAKE_PROD_DATABASE') }}" # PROD
         +materialized: table
 
       edcast:
@@ -344,7 +344,7 @@ models:
       +materialized: table
       +schema: common
       sensitive:
-        +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+        +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
         +schema: sensitive
         secure: true
       dimensions_shared:
@@ -375,7 +375,7 @@ models:
       +materialized: table
       +schema: common_prep
       month_partition:
-        +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+        +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
         +schema: "dotcom_usage_events_{{ var('year', (run_started_at - modules.datetime.timedelta(2)).strftime('%Y')) }}_{{ var('month', (run_started_at - modules.datetime.timedelta(2)).strftime('%m')) }}"
       restricted_safe:
         +schema: restricted_safe_common_prep
@@ -424,7 +424,7 @@ models:
 
       bamboohr:
         sensitive:
-          +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+          +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
           +schema: sensitive
           secure: true
 
@@ -438,14 +438,14 @@ models:
         +materialized: view
 
       discourse:
-        +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+        +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
         +schema: preparation
         +tags: ["discourse", "social"]
 
       gitlab_dotcom:
         +tags: ["product"]
         sensitive:
-          +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+          +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
           +materialized: view
           +schema: sensitive
         source_view:
@@ -460,7 +460,7 @@ models:
 
       greenhouse:
         xf:
-          +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+          +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
           +schema: sensitive
           secure: true
 
@@ -505,7 +505,7 @@ models:
       snowplow:
         +tags: ["product"]
         month_partition:
-          +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+          +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
           +schema: "snowplow_{{ var('year', (run_started_at - modules.datetime.timedelta(1)).strftime('%Y')) }}_{{ var('month', (run_started_at - modules.datetime.timedelta(1)).strftime('%m')) }}"
 
       version:
@@ -607,7 +607,7 @@ models:
         secure: true
 
       exports:
-        +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+        +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
         +materialized: view
         +schema: exports
 
@@ -615,12 +615,12 @@ models:
           enabled: false
 
       pumps:
-        +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" #PROD
+        +database: "{{ env_var('DBT_SNOWFLAKE_PROD_DATABASE') }}" #PROD
         +schema: pumps
         +materialized: table
 
       pumps_sensitive:
-        +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" #PROD
+        +database: "{{ env_var('DBT_SNOWFLAKE_PROD_DATABASE') }}" #PROD
         +schema: pumps_sensitive
         +materialized: table
 
@@ -648,7 +648,7 @@ models:
     # Trusted Data Framework
     # ------------------
     trusted_data_framework:
-      +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+      +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
       +materialized: table
       +schema: tdf
       secure: true
@@ -664,7 +664,7 @@ snapshots:
     - "alter table {{ this }} set DATA_RETENTION_TIME_IN_DAYS = 30"
   +query_tag: dbt
   gitlab_snowflake:
-    target_database: "{{ env_var('SNOWFLAKE_SNAPSHOT_DATABASE') }}" #RAW in production
+    target_database: "{{ env_var('DBT_SNOWFLAKE_SNAPSHOT_DATABASE') }}" #RAW in production
     target_schema: "snapshots"
     transient: false
 
