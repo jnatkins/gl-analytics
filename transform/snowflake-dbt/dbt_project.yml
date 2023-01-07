@@ -56,7 +56,7 @@ seeds:
   +query_tag: dbt
 
   data_tests:
-    +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+    +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
     +schema: tdf
 
   gitlab_snowflake:
@@ -451,7 +451,7 @@ models:
         source_view:
           +materialized: view
         staging:
-          +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+          +database: "{{ env_var('DBT_SNOWFLAKE_PREP_DATABASE') }}" #PREP
           +schema: preparation
 
       gitlab_ops:
